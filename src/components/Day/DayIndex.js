@@ -11,7 +11,7 @@ import axios from "axios";
 function DayIndex() {
   const [days, setDays] = useState([]);
   const [DialogOpen, setDialogOpen] = useState(false);
-  const [selectedDay, setSelectedDay] = useState(null);
+  const [selectedDay, setSelectedDay] = useState("null");
   const [isLoading, setIsLoading] = useState(true);
 
   const editDay = (day) => {
@@ -42,7 +42,27 @@ function DayIndex() {
         method: selectedDay ? "PUT" : "POST", // Specify the method based on selectedDay
         data: editedDay,
       });
-      setDays((prevDays) => [{ ...response.data }, ...prevDays]);
+
+
+      let updatedDays 
+      if(selectedDay){
+     updatedDays = days.map((day) => {
+        if (day.id === response.data.id) {
+          // Replace the object with the same "id"
+          return response.data;
+        }
+        return day;
+      });}
+        else{
+            updatedDays = [ response.data,...days];
+        }
+
+
+
+console.log("Final====>",updatedDays)
+
+      setDays(updatedDays);
+      setSelectedDay(null);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -86,7 +106,7 @@ function DayIndex() {
             startIcon={<AddCircleOutlineOutlinedIcon />}
             variant={"contained"}
             title={"Days"}
-            buttonText={"Creat Day"}
+            buttonText={"Create Day"}
             onClick={() => setDialogOpen(true)}
           />
           <Divider style={{ padding: "10px 0px" }} />

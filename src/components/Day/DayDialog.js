@@ -34,7 +34,7 @@ const DayDialog = ({ open, onClose, onSave, selectedDay }) => {
             <TextField
               name="number"
               label="Number"
-              value={day?.number}
+              value={day?.number || ""}
               onChange={handleChange}
               fullWidth
               InputProps={{

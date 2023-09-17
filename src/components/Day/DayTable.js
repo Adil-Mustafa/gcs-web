@@ -82,7 +82,6 @@ const DayTable = ({ days, editDay, deleteDay, isLoading }) => {
   ];
 
 
-console.log(columns, "columns")
   if (isLoading) return <CircularProgress />;
   if (days.length < 1) return <EmptyRecords />;
   return (
