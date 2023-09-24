@@ -7,86 +7,55 @@ import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOu
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { getDays, saveDay ,deleteDay } from "../../api/days";
 
 function DayIndex() {
-  const [days, setDays] = useState([]);
   const [DialogOpen, setDialogOpen] = useState(false);
-  const [selectedDay, setSelectedDay] = useState("null");
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedDay, setSelectedDay] = useState(null);
 
+  const queryClient = useQueryClient();
+
+  const daysQuery = useQuery({
+    queryKey: ["days"],
+    queryFn: getDays,
+  });
+
+  console.log("DAYSQUERYYYY", daysQuery.data, "LOADING", daysQuery.isLoading);
+
+  const handleDelete = (id) => {
+    deleteDayMutation.mutate(id);
+  };
+
+ 
+  const deleteDayMutation = useMutation({
+    mutationFn: deleteDay,
+    onMutate: (id) => {
+     },
+    onSuccess: () => {
+
+      // queryClient.invalidateQueries(["days"], { exact: true });
+    },
+  });
+
+  const saveDayMutation = useMutation({
+    mutationFn: saveDay,
+    onSuccess: (data) => {
+      console.log("DATAAAAAAONSUCCESS", data);
+      queryClient.invalidateQueries(["days"], { exact: true });
+    },
+  });
+
+  function handleSubmit(editedDay) {
+    console.log("odkkkkkkkkkkkkkkkkk", editedDay , "SelectedDay" , selectedDay)
+    saveDayMutation.mutate({
+      body: editedDay,
+      selectedDay,
+    });
+  }
   const editDay = (day) => {
     setSelectedDay(day);
     setDialogOpen(true);
-  };
-
-  const fetchData = async () => {
-    setIsLoading(true);
-    const apiUrl = "http://gcstimetable.xyz/api/days";
-    try {
-      const response = await axios.get(apiUrl);
-      console.log("response", response.data);
-      setDays(response.data);
-      setIsLoading(false);
-    } catch (error) {
-      setIsLoading(false);
-      console.error("Error fetching data:", error);
-    }
-  };
-  const saveDay = async (editedDay) => {
-    const apiUrl = `http://gcstimetable.xyz/api/days${
-      selectedDay ? "/" + selectedDay.id : ""
-    }`;
-    try {
-      const response = await axios({
-        url: apiUrl,
-        method: selectedDay ? "PUT" : "POST", // Specify the method based on selectedDay
-        data: editedDay,
-      });
-
-
-      let updatedDays 
-      if(selectedDay){
-     updatedDays = days.map((day) => {
-        if (day.id === response.data.id) {
-          // Replace the object with the same "id"
-          return response.data;
-        }
-        return day;
-      });}
-        else{
-            updatedDays = [ response.data,...days];
-        }
-
-
-
-console.log("Final====>",updatedDays)
-
-      setDays(updatedDays);
-      setSelectedDay(null);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const deleteDay = async (id) => {
-    const apiUrl = `http://gcstimetable.xyz/api/days/${id}`;
-    try {
-      const response = await axios.delete(apiUrl);
-      console.log("responseDelte", response.data);
-
-      setDays((prevDays) => prevDays.filter((day) => day.id !== id));
-      console.log(response.message);
-      toast.success(response.message, {
-        position: toast.POSITION.TOP_RIGHT,
-        autoClose: 3000, // Close after 3 seconds
-      });
-    } catch (error) {
-      console.error("Error Deleting data:", error);
-    }
-    // Make the DELETE request
   };
 
   return (
@@ -95,7 +64,7 @@ console.log("Final====>",updatedDays)
         <DayDialog
           open={DialogOpen}
           onClose={() => setDialogOpen(false)}
-          onSave={saveDay}
+          onSave={handleSubmit}
           selectedDay={selectedDay}
         />
       )}
@@ -116,25 +85,18 @@ console.log("Final====>",updatedDays)
           container
           item
           xs={12}
-          style={{
-            ...(days.length < 1 && {
-              justifyContent: "center",
-              marginTop: 100,
-            }),
-          }}
+        
         >
           <DayTable
-            days={days}
-            editDay={editDay}
-            deleteDay={deleteDay}
-            isLoading={isLoading}
+            days={daysQuery.data}
+            editDay={editDay} 
+            deleteDay={handleDelete}
+            isLoading={daysQuery.isLoading}
           />
         </Grid>
       </Grid>
     </Grid>
   );
 }
-
-
 
 export default DayIndex;
